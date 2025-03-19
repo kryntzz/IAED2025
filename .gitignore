@@ -8,6 +8,8 @@
 *.log
 *.log.*
 *.sig
+*.out
+*.o
 
 pkg/
 src/
