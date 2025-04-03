@@ -4,97 +4,88 @@
  * @author ist1113637 (Simão Lavos)
  */
 
-#include "include/all.h"
+#include "all.h"
+#include "inoculation.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-void freeSystem(Node **head) {
-  Node *current = *head;
-  while (current != NULL) {
-    Node *aux = current;
-    current = current->next;
-    free(aux->inoc.name);
-    free(aux);
+/**
+ * @brief Changes the current date of the system.
+ *
+ * @param sys Pointer to the system structure.
+ * @param input Input string containing the new date.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ */
+void changeDate(Sys *sys, char *input, int pt) {
+  Date date;
+  if (sscanf(input, "%*s %d-%d-%d", &date.day, &date.month, &date.year) <= 1) {
+    printDate(sys->currentDate);
+  } else {
+    if (!validDate(date) || compareDates(sys->currentDate, date) > 0) {
+      puts(pt ? EINVDATE : DATAINV);
+      return;
+    }
+    sys->currentDate = date;
+    printDate(date);
   }
-  *head = NULL;
 }
 
-/** Checks if a name already exists in the system
- * @param sys> system to check the name
- * @param name> name to check
- * @return 1 if the name does not exist, 0 otherwise
+/**
+ * @brief Verifies if a vaccine is valid.
+ *
+ * @param sys Pointer to the system structure.
+ * @param vaccine Vaccine structure to verify.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ * @return int 1 if the vaccine is valid, 0 otherwise.
  */
-int nameExists(Sys *sys, char *name) {
-  for (int i = 0; i < sys->count; i++) {
-    if (!strcmp(name, sys->data[i].name)) {
-      return 0;
-    }
+int verifyVaccine(Sys *sys, Vaccine vaccine, int pt) {
+
+  if (!batchExists(sys, vaccine.batch)) {
+    puts(pt ? EDUPBATCH : LOTEDUP);
+    return 0;
+  }
+
+  if (!validBatch(vaccine.batch)) {
+    puts(pt ? EINVBATCH : LOTEINV);
+    return 0;
+  }
+
+  if (!validName(vaccine.name)) {
+    puts(pt ? EINVNAME : NOMEINV);
+    return 0;
+  }
+
+  if (!validDate(vaccine.date) ||
+      compareDates(sys->currentDate, vaccine.date) > 0) {
+    puts(pt ? EINVDATE : DATAINV);
+    return 0;
+  }
+
+  if (vaccine.stock < 0) {
+    puts(pt ? INVQUANT_EN : INVQUANT);
+    return 0;
   }
   return 1;
 }
 
-int validName(char name[MAXNAME]) {
-  int len = strlen(name);
-  if (len > MAXNAME) {
-    return 1;
-  }
-  for (int i = 0; i < len; i++) {
-    char c = name[i];
-    if (c == ' ' || c == '\n' || c == '\t') {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-void changeDate(Sys *sys, char *input, int pt) {
-  Date date;
-  if (sscanf(input, "%*s %d-%d-%d", &date.day, &date.month, &date.year) <= 1) {
-    printf("%02d-%02d-%02d\n", sys->currentDate.day, sys->currentDate.month,
-           sys->currentDate.year);
-  } else {
-    if (validDate(date) == 1 || compareDates(sys->currentDate, date) > 0) {
-      if (pt == 0)
-        puts(DATAINV);
-      else
-        puts(EINVDATE);
-      return;
-    }
-    sys->currentDate = date;
-    printf("%02d-%02d-%02d\n", date.day, date.month, date.year);
-  }
-}
-
+/**
+ * @brief Creates a new vaccine and adds it to the system.
+ *
+ * @param sys Pointer to the system structure.
+ * @param input Input string containing the vaccine details.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ */
 void createVaccine(Sys *sys, char *input, int pt) {
   Vaccine vaccine;
-  char input2[BUFMAX];
-  strcpy(input2, input);
   Date date;
+
   if (sys->count + 1 > MAXBATCH) {
-    if (pt == 0)
-      puts(MXMVACINAS);
-    else
-      puts(EMAXVACCINE);
+    puts(pt ? EMAXVACCINE : MXMVACINAS);
     return;
   }
-  char *token = strtok(input2, " ");
-  token = strtok(NULL, " ");
-  if (strlen(token) > MAXBATCHCODE) {
-    if (pt == 0)
-      puts(LOTEINV);
-    else
-      puts(EINVBATCH);
-    return;
-  }
-  token = strtok(NULL, " ");
-  token = strtok(NULL, " ");
-  token = strtok(NULL, " ");
-  if (strlen(token) > MAXNAME) {
-    if (pt == 0)
-      puts(NOMEINV);
-    else
-      puts(EINVNAME);
+
+  if (!validateVaccineInput(input, pt)) {
     return;
   }
 
@@ -103,44 +94,9 @@ void createVaccine(Sys *sys, char *input, int pt) {
 
   vaccine.date = date;
 
-  if (batchExists(sys, vaccine.batch) == 0) {
-    if (pt == 0)
-      puts(LOTEDUP);
-    else
-      puts(EDUPBATCH);
+  if (!verifyVaccine(sys, vaccine, pt))
     return;
-  }
 
-  if (validBatch(vaccine.batch) == 1) {
-    if (pt == 0)
-      puts(LOTEINV);
-    else
-      puts(EINVBATCH);
-    return;
-  }
-
-  if (validName(vaccine.name) == 1) {
-    if (pt == 0)
-      puts(NOMEINV);
-    else
-      puts(EINVNAME);
-    return;
-  }
-  if (validDate(date) == 1 || compareDates(sys->currentDate, date) > 0) {
-    if (pt == 0)
-      puts(DATAINV);
-    else
-      puts(EINVDATE);
-    return;
-  }
-
-  if (vaccine.stock < 0) {
-    if (pt == 0)
-      printf("quantidade inválida\n");
-    else
-      printf("invalid quantity\n");
-    return;
-  }
   vaccine.appDoses = 0;
   sys->data[sys->count] = vaccine;
   sys->count++;
@@ -148,46 +104,39 @@ void createVaccine(Sys *sys, char *input, int pt) {
   printf("%s\n", vaccine.batch);
 }
 
+/**
+ * @brief Lists all vaccines or vaccines with a specific name.
+ *
+ * @param sys Pointer to the system structure.
+ * @param input Input string containing the name of the vaccine.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ */
 void listVaccine(Sys *sys, char *input, int pt) {
   char name[MAXNAME];
 
   if (sscanf(input, "%*s %s", name) < 1) {
-    Vaccine vaccines[sys->count];
     for (int i = 0; i < sys->count; i++) {
-      vaccines[i] = sys->data[i];
-    }
-    for (int i = 0; i < sys->count; i++) {
-      dispayVaccine(vaccines[i]);
+      dispayVaccine(sys->data[i]);
       putchar('\n');
     }
-
   } else {
+
+    // Get all the names
     char *token = strtok(input, " ");
     token = strtok(NULL, " \n");
 
     while (token != NULL) {
       strcpy(name, token);
 
-      if (nameExists(sys, name) == 1) {
+      if (!nameExists(sys->data, name, sys->count)) {
         printf("%s: ", name);
-        if (pt == 0)
-          puts(NOMEVACINV);
-        else
-          puts(EINVNAMEVAC);
+        puts(pt ? EINVNAMEVAC : NOMEVACINV);
       } else {
-
-        Vaccine vaccines[sys->count];
-        int count = 0;
-
         for (int i = 0; i < sys->count; i++) {
-          if (strcmp(name, sys->data[i].name) == 0) {
-            vaccines[count++] = sys->data[i];
+          if (!strcmp(name, sys->data[i].name)) {
+            dispayVaccine(sys->data[i]);
+            putchar('\n');
           }
-        }
-
-        for (int i = 0; i < count; i++) {
-          dispayVaccine(vaccines[i]);
-          putchar('\n');
         }
       }
       token = strtok(NULL, " \n");
@@ -195,96 +144,72 @@ void listVaccine(Sys *sys, char *input, int pt) {
   }
 }
 
+/**
+ * @brief Appends a new node to the system's linked list.
+ *
+ * @param sys Pointer to the system structure.
+ * @param newNode Pointer to the new node to append.
+ */
+void appendNode(Sys *sys, Node *newNode) {
+  if (!sys->data2)
+    sys->data2 = sys->tail = newNode;
+  else
+    sys->tail->next = newNode, sys->tail = newNode;
+}
+
+/**
+ * @brief Applies an inoculation to a user.
+ *
+ * @param sys Pointer to the system structure.
+ * @param input Input string containing the inoculation details.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ */
 void applyInoculation(Sys *sys, char *input, int pt) {
-  char *name;
-  char vacName[MAXNAME];
-  unsigned long nameLen = 0;
-
-  input = strchr(input, ' ');
-  input++;
-
-  if (*input == '"') {
-    input++;
-    char *endQuote = strchr(input, '"');
-    nameLen = endQuote - input;
-    name = malloc(nameLen + 1);
-
-    strncpy(name, input, nameLen);
-    name[nameLen] = '\0';
-    input = endQuote + 1;
-  } else {
-    char *endSpace = strchr(input, ' ');
-    nameLen = endSpace - input;
-    name = malloc(nameLen + 1);
-
-    strncpy(name, input, nameLen);
-    name[nameLen] = '\0';
-    input = endSpace;
-  }
-
+  unsigned long nameLen;
+  char *name = extractName(&input, &nameLen);
   while (*input == ' ')
     input++;
+  char vacName[MAXNAME];
   sscanf(input, "%s", vacName);
 
-  Vaccine *selectedVaccine = NULL;
-
-  for (int i = 0; i < sys->count; i++) {
-    if (strcmp(vacName, sys->data[i].name) == 0 &&
-        validDate(sys->data[i].date) == 0 &&
-        compareDates(sys->currentDate, sys->data[i].date) < 0 &&
-        sys->data[i].stock > 0) {
-      selectedVaccine = &sys->data[i];
-      break;
-    }
-  }
-
-  if (selectedVaccine == NULL) {
-    if (pt == 0)
-      printf("esgotado\n");
-    else
-      printf("no stock\n");
+  Vaccine *vaccine =
+      findVaccine(sys->data, vacName, sys->count, sys->currentDate);
+  if (!vaccine) {
+    puts(pt ? NOSTOCK : ESGOTADO);
     free(name);
     return;
   }
 
-  // Check if the user is already vaccinated using the hash map
+  // Verify if the pacient as already been vaccinated
+  // for the same vaccine that day
   if (isVaccinated(sys->map, name, vacName, sys->currentDate)) {
-    if (pt == 0)
-      printf("já vacinado\n");
-    else
-      printf("already vaccinated\n");
+    printf(pt ? "already vaccinated\n" : "já vacinado\n");
     free(name);
     return;
   }
 
   Node *newNode =
-      createNewNode(name, selectedVaccine->batch, sys->currentDate, vacName);
-  if (sys->data2 == NULL) {
-
-    sys->data2 = newNode;
-    sys->tail = newNode;
-  } else {
-    sys->tail->next = newNode;
-    sys->tail = newNode;
-  }
-
-  printf("%s\n", selectedVaccine->batch);
-
-  selectedVaccine->stock--;
-  selectedVaccine->appDoses++;
-
-  // Insert the new inoculation into the hash map
+      createNewNode(name, vaccine->batch, sys->currentDate, vacName);
+  appendNode(sys, newNode);
+  printf("%s\n", vaccine->batch);
+  vaccine->stock--, vaccine->appDoses++;
   insertHash(sys->map, name, newNode->inoc);
-
   free(name);
 }
 
+/**
+ * @brief Lists all inoculations or inoculations for a specific user.
+ *
+ * @param sys Pointer to the system structure.
+ * @param input Input string containing the user's name.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ */
 void listInoculation(Sys *sys, char *input, int pt) {
   int count = 0;
-  unsigned long nameLen = 0;
-  char *name;
-  char *ptr = input;
+  char *name, *ptr = input;
   ptr = strchr(ptr, ' ');
+
+  // Standart case
   if (!ptr) {
     for (Node *current = sys->data2; current != NULL; current = current->next) {
       displayInoc(current->inoc);
@@ -293,58 +218,37 @@ void listInoculation(Sys *sys, char *input, int pt) {
   }
   ptr++;
 
-  if (*ptr == '"') {
-    ptr++;
-    char *endQuote = strchr(ptr, '"');
-
-    nameLen = endQuote - ptr;
-    name = malloc(nameLen + 1);
-    if (name == NULL) {
-      if (pt == 0)
-        puts("erro de memória");
-      else
-        puts("memory error");
-      return;
-    }
-    strncpy(name, ptr, nameLen);
-    name[nameLen] = '\0';
-    ptr = endQuote + 1;
-  } else {
-    char *endSpace = strchr(ptr, '\n');
-    nameLen = endSpace - ptr;
-    name = malloc(nameLen + 1);
-    if (name == NULL) {
-      if (pt == 0)
-        puts("sem memória");
-      else
-        puts("no memory");
-      return;
-    }
-    strncpy(name, ptr, nameLen);
-    name[nameLen] = '\0';
-    ptr = endSpace;
+  // Get the name
+  char *end = (*ptr == '"') ? strchr(ptr + 1, '"') : strchr(ptr, ' ') ?: strchr(ptr, '\n');
+  size_t nameLen = (*ptr == '"') ? (end - ptr - 1) : (end - ptr);
+  name = malloc(nameLen + 1);
+  if (name == NULL) {
+    puts(pt ? NOMEMORY : SEMMEMORIA);
+    return;
   }
+  strncpy(name, (*ptr == '"') ? ptr + 1 : ptr, nameLen);
+  name[nameLen] = '\0';
 
   for (Node *current = sys->data2; current != NULL; current = current->next) {
-    if (strcmp(name, current->inoc.name) == 0) {
+    if (!strcmp(name, current->inoc.name)) {
       count++;
       displayInoc(current->inoc);
     }
   }
 
-  if (count == 0) {
-    if (pt == 0)
-      printf("%s: utente inexistente\n", name);
-    else
-      printf("%s: no such user\n", name);
-    free(name);
-    return;
-  }
-
+  if (count == 0)
+    printf(pt ? "%s: no such user\n" : "%s: utente inexistente\n", name);
   free(name);
 }
 
-void removeDisp(Sys *sys, char *input, int pt) {
+/**
+ * @brief Removes a vaccine batch from the system.
+ *
+ * @param sys Pointer to the system structure.
+ * @param input Input string containing the batch code.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ */
+void removeVaccine(Sys *sys, char *input, int pt) {
   char batch[MAXBATCHCODE];
   sscanf(input, "%*s %s", batch);
 
@@ -352,222 +256,156 @@ void removeDisp(Sys *sys, char *input, int pt) {
     if (strcmp(batch, sys->data[i].batch) == 0) {
       printf("%d\n", sys->data[i].appDoses);
       if (sys->data[i].appDoses == 0) {
-        // Remove the batch if no doses have been applied
         for (int j = i; j < sys->count - 1; j++) {
           sys->data[j] = sys->data[j + 1];
         }
         sys->count--;
       } else {
-        // Set stock to applied doses if there have been inoculations
         sys->data[i].stock = 0;
       }
       return;
     }
   }
-  if (pt == 0)
-    printf("%s: lote inexistente\n", batch);
-  else
-    printf("%s: no such batch\n", batch);
+  printf(pt ? "%s: no such batch\n" : "%s: lote inexistente\n", batch);
 }
 
+/**
+ * @brief Helper function to remove inoculations by name and date.
+ *
+ * @param sys Pointer to the system structure.
+ * @param name Name of the user.
+ * @param date Date of the inoculation.
+ * @param count Pointer to store the count of removed inoculations.
+ */
+void removeInocByNameAndDateHelper(Sys *sys, char *name, Date date,
+                                   int *count) {
+  removeInocByNameAndDate(&sys->data2, name, date, count);
+  removeHashByNameAndDate(sys->map, name, date);
+}
+
+/**
+ * @brief Helper function to remove inoculations by name, batch, and date.
+ *
+ * @param sys Pointer to the system structure.
+ * @param name Name of the user.
+ * @param batch Batch code of the vaccine.
+ * @param date Date of the inoculation.
+ * @param count Pointer to store the count of removed inoculations.
+ * @param countBatch Pointer to store the count of removed batches.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ */
+void removeInocByNameBatchHelper(Sys *sys, char *name, char *batch, Date date,
+                                 int *count, int *countBatch, int pt) {
+  removeInocByNameBatchAndDate(&sys->data2, name, batch, date, count,
+                               countBatch);
+  removeHashByNameBatchAndDate(sys->map, name, batch, date);
+  if (*countBatch == 0) {
+    printf(pt ? "%s: no such batch\n" : "%s: lote inexistente\n", batch);
+  }
+}
+
+/**
+ * @brief Helper function to handle the default case for removing inoculations.
+ *
+ * @param sys Pointer to the system structure.
+ * @param name Name of the user.
+ * @param count Pointer to store the count of removed inoculations.
+ */
+void removeInocDefaultCase(Sys *sys, char *name, int *count) {
+  removeInocByName(&sys->data2, name, count);
+  sys->map->arr[hashFunc(sys->map, name)] = NULL;
+}
+
+/**
+ * @brief Removes inoculations based on the input string.
+ *
+ * This function handles the removal of inoculations from the system based on
+ * the provided input. It supports different cases, such as removing by name
+ * and date, by name, batch, and date, or by name only.
+ *
+ * @param sys Pointer to the system structure.
+ * @param input Input string containing the removal details.
+ * @param pt Language flag (0 for Portuguese, 1 for English).
+ */
 void removeInoc(Sys *sys, char *input, int pt) {
-  int count = 0;
-  char batch[MAXBATCHCODE];
-  unsigned long nameLen = 0;
-  char *name;
-  Date date;
-  char *ptr = input;
-  ptr = strchr(ptr, ' ');
+    int count = 0, inp = 0, countBatch = 0;
+    char batch[MAXBATCHCODE], *name, *ptr = input;
+    Date date;
 
-  ptr++;
-
-  if (*ptr == '"') {
+    ptr = strchr(ptr, ' ');
     ptr++;
-    char *endQuote = strchr(ptr, '"');
+    if (extractNameFromInput(&ptr, &name, pt)) return;
+    if (!inocVerify(name, sys->data2, pt)) { free(name); return; }
 
-    nameLen = endQuote - ptr;
-    name = malloc(nameLen + 1);
-    if (name == NULL) {
-      if (pt == 0)
-        puts("sem memória");
-      else
-        puts("no memory");
-      return;
+    inp = sscanf(input, "%*s %*s %d-%d-%d %s", &date.day, &date.month, &date.year, batch);
+    
+    switch (inp) {
+        case 3:
+            if (!validateDate(date, sys->currentDate, pt)) { free(name); return; }
+            removeInocByNameAndDateHelper(sys, name, date, &count);
+            break;
+        case 4:
+            removeInocByNameBatchHelper(sys, name, batch, date, &count, &countBatch, pt);
+            if (countBatch == 0) { free(name); return; }
+            break;
+        default:
+            removeInocDefaultCase(sys, name, &count);
+            break;
     }
-    strncpy(name, ptr, nameLen);
-    name[nameLen] = '\0';
-    ptr = endQuote + 1;
-  } else {
-    char *endSpace = strchr(ptr, ' ');
-    if (endSpace == NULL) {
-      endSpace = strchr(ptr, '\n');
-    }
-    nameLen = endSpace - ptr;
-    name = malloc(nameLen + 1);
-    if (name == NULL) {
-      if (pt == 0)
-        puts("sem memória");
-      else
-        puts("no memory");
-      return;
-    }
-    strncpy(name, ptr, nameLen);
-    name[nameLen] = '\0';
-    ptr = endSpace;
-  }
-
-  int countName = 0;
-  for (Node *current = sys->data2; current != NULL; current = current->next) {
-    if (strcmp(name, current->inoc.name) == 0) {
-      countName++;
-      break;
-    }
-  }
-  if (countName == 0) {
-    if (pt == 0)
-      printf("%s: utente inexistente\n", name);
-    else
-      printf("%s: no such user\n", name);
     free(name);
-    return;
-  }
-  int inp = 0;
-  int countBatch = 0;
-
-  if ((inp = sscanf(input, "%*s %*s %d-%d-%d %s", &date.day, &date.month,
-                    &date.year, batch)) == 3) {
-    if (compareDates(sys->currentDate, date) < 0 || validDate(date) == 1) {
-      if (pt == 0)
-        puts(DATAINV);
-      else
-        puts(EINVDATE);
-      free(name);
-      return;
-    }
-    Node *current = sys->data2;
-    Node *prev = NULL;
-    while (current != NULL) {
-      if (strcmp(name, current->inoc.name) == 0 &&
-          compareDates(date, current->inoc.date) == 0) {
-        count++;
-        if (prev == NULL) {
-          sys->data2 = current->next;
-        } else {
-          prev->next = current->next;
-        }
-        Node *temp = current;
-        current = current->next;
-        free(temp->inoc.name);
-        free(temp);
-      } else {
-        prev = current;
-        current = current->next;
-      }
-    }
-  } else if (inp == 4) {
-    Node *current = sys->data2;
-    Node *prev = NULL;
-    while (current != NULL) {
-      if (strcmp(batch, current->inoc.batch) == 0) {
-        countBatch++;
-      }
-      if (strcmp(name, current->inoc.name) == 0 &&
-          strcmp(batch, current->inoc.batch) == 0 &&
-          compareDates(date, current->inoc.date) == 0) {
-        count++;
-        if (prev == NULL) {
-          sys->data2 = current->next;
-        } else {
-          prev->next = current->next;
-        }
-        Node *temp = current;
-        current = current->next;
-        free(temp->inoc.name);
-        free(temp);
-      } else {
-        prev = current;
-        current = current->next;
-      }
-    }
-    if (countBatch == 0) {
-      if (pt == 0)
-        printf("%s: lote inexistente\n", batch);
-      else
-        printf("%s: no such batch\n", batch);
-      free(name);
-      return;
-    }
-  } else {
-    Node *current = sys->data2;
-    Node *prev = NULL;
-    while (current != NULL) {
-      if (strcmp(name, current->inoc.name) == 0) {
-        count++;
-        if (prev == NULL) {
-          sys->data2 = current->next;
-        } else {
-          prev->next = current->next;
-        }
-        Node *temp = current;
-        current = current->next;
-        free(temp->inoc.name);
-        free(temp);
-      } else {
-        prev = current;
-        current = current->next;
-      }
-    }
-  }
-
-  free(name);
-  printf("%d\n", count);
+    printf("%d\n", count);
 }
 
+/**
+ * @brief Initializes the system with default values.
+ *
+ * @param sys Pointer to the system structure.
+ */
+void initializeSystem(Sys *sys) {
+  sys->currentDate.day = 1;
+  sys->currentDate.month = 1; // Default: 01-01-2025
+  sys->currentDate.year = 2025;
+  sys->count = 0;
+  sys->data2 = NULL;
+  sys->tail = sys->data2;
+  sys->map = (hashMap *)malloc(sizeof(hashMap));
+  initializeHashMap(sys->map);
+}
+
+/**
+ * @brief Main function of the program.
+ *
+ * @param argc Argument count.
+ * @param argv Argument vector.
+ * @return int Exit status.
+ */
 int main(int argc, char **argv) {
-  char pt = 1;
+  int pt = 1;
   char buf[BUFMAX];
   Sys sys;
-  sys.currentDate.day = 1;
-  sys.currentDate.month = 1;
-  sys.currentDate.year = 2025;
-
-  sys.count = 0;
-  sys.data2 = NULL;
-  sys.tail = sys.data2;
-
-  sys.map = (hashMap *)malloc(sizeof(hashMap)); // Allocate memory for sys.map
-  initializeHashMap(sys.map);
+  initializeSystem(&sys);
 
   if (argc > 1 && strcmp(argv[1], "pt") == 0)
-    pt = 0;
+    pt = 0; // Checks if the input is in Portuguese
 
   while (fgets(buf, BUFMAX, stdin)) {
     switch (buf[0]) {
     case 'q':
-      freeSystem(&sys.data2);
-      freeHashMap(sys.map); // Free the hash map
-      return 0;
+      freeSystem(&sys.data2); freeHashMap(sys.map); return 0;
     case 'c':
-      createVaccine(&sys, buf, pt);
-      break;
+      createVaccine(&sys, buf, pt); break;
     case 'l':
-      listVaccine(&sys, buf, pt);
-      break;
+      listVaccine(&sys, buf, pt); break;
     case 'a':
-      applyInoculation(&sys, buf, pt);
-      break;
+      applyInoculation(&sys, buf, pt); break;
     case 't':
-      changeDate(&sys, buf, pt);
-      break;
+      changeDate(&sys, buf, pt); break;
     case 'u':
-      listInoculation(&sys, buf, pt);
-      break;
+      listInoculation(&sys, buf, pt); break;
     case 'r':
-      removeDisp(&sys, buf, pt);
-      break;
+      removeVaccine(&sys, buf, pt); break;
     case 'd':
-      removeInoc(&sys, buf, pt);
-      break;
+      removeInoc(&sys, buf, pt); break;
     }
   }
   return 0;

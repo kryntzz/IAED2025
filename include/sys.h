@@ -5,14 +5,16 @@
 #include "inoculation.h"
 #include "vaccine.h"
 
-/** all state information stored by the system */
+/**
+ * @brief Structure to represent everything stored.
+ */
 typedef struct {
-  Date currentDate;       /** current date          */
-  int count;              /** number of vaccines    */
-  Vaccine data[MAXBATCH]; /** vaccine information   */
-  Node *data2;
-  Node *tail;
-  hashMap *map;
+  Date currentDate;       /** current date                             */
+  int count;              /** number of vaccines                      */
+  Vaccine data[MAXBATCH]; /** vaccine information                     */
+  Node *data2;            /** pointer to the head of the linked list  */
+  Node *tail;             /** pointer to the tail of the linked list  */
+  hashMap *map;           /** pointer to the hasmap                   */
 } Sys;
 
 #endif // !SYS_H
