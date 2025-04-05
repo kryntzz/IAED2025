@@ -1,15 +1,15 @@
+/*
+ * Projecto de IAED2025
+ * @file vaccine.c
+ * @author ist1113637 (Simão Lavos)
+ */
+
 #include "vaccine.h"
 #include "batch.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * @brief Swaps the value of two vaccines.
- *
- * @param a Pointer to the first vaccine.
- * @param b Pointer to the second vaccine.
- */
 void swap(Vaccine *a, Vaccine *b) {
   Vaccine temp = *a;
 
@@ -17,17 +17,11 @@ void swap(Vaccine *a, Vaccine *b) {
   *b = temp;
 }
 
-/**
- * @brief Checks if a name exists in the system.
- *
- * @param sys Pointer to the system structure.
- * @param name Name to check.
- * @return int 1 if the name exists, 0 otherwise.
- */
-
 int nameExists(Vaccine *sys, char *name, int count) {
+  // Iterates through all the vaccines
   for (int i = 0; i < count; i++) {
-
+    
+    // Compares the name
     if (!strcmp(name, sys[i].name)) {
       return 1;
     }
@@ -35,16 +29,12 @@ int nameExists(Vaccine *sys, char *name, int count) {
   return 0;
 }
 
-/**
- * @brief Validates the input for creating a vaccine.
- *
- * @param input Input string containing the vaccine details.
- * @param pt Language flag (0 for Portuguese, 1 for English).
- * @return int 0 if the input is invalid, 1 otherwise.
- */
 int validateVaccineInput(char *input, int pt) {
   char input2[BUFMAX];
-
+  
+  // Creates a copy of the input because strtok
+  // changes it, then it gets the word by searching
+  // for the ' ' at the end of the name
   strcpy(input2, input);
   char *token = strtok(input2, " ");
   token = strtok(NULL, " ");
@@ -66,12 +56,6 @@ int validateVaccineInput(char *input, int pt) {
   return 1;
 }
 
-/**
- * @brief Validates a name.
- *
- * @param name Name to validate.
- * @return int 0 if the name is invalid, 1 otherwise.
- */
 int validName(char name[MAXNAME]) {
   int len = strlen(name);
 
@@ -88,25 +72,22 @@ int validName(char name[MAXNAME]) {
   return 1;
 }
 
-/**
- * @brief Merges two subarrays of vaccines.
- *
- * @param arr Array of vaccines.
- * @param l Left index.
- * @param m Middle index.
- * @param r Right index.
- */
 void merge(Vaccine arr[], int l, int m, int r) {
   int n1 = m - l + 1, n2 = r - m;
 
   Vaccine L[n1], R[n2];
-
+  
+  // Iterates through the left part of the array
   for (int i = 0; i < n1; i++)
     L[i] = arr[l + i];
+
+  // Iterates through the right part of the array
   for (int j = 0; j < n2; j++)
     R[j] = arr[m + 1 + j];
 
   int i = 0, j = 0, k = l;
+
+  // Compares the dates and swaps them when needed
   while (i < n1 && j < n2) {
 
     if (compareDates(L[i].date, R[j].date) < 0 ||
@@ -120,29 +101,26 @@ void merge(Vaccine arr[], int l, int m, int r) {
     }
     k++;
   }
-
+  
+  // Finishes goint through the array, adding it to the right part
   while (i < n1) {
     arr[k] = L[i];
     i++, k++;
   }
 
+  //  Finishes goint through the array, adding it to the left part
   while (j < n2) {
     arr[k] = R[j];
     j++, k++;
   }
 }
 
-/**
- * @brief Sorts an array of vaccines using merge sort.
- *
- * @param arr Array of vaccines.
- * @param l Left index.
- * @param r Right index.
- */
 void mergeSort(Vaccine arr[], int l, int r) {
   if (l < r) {
     int m = l + (r - l) / 2;
-
+    
+    // Recursively goes to through the right part of the array
+    //  and the left part of the array
     mergeSort(arr, l, m);
     mergeSort(arr, m + 1, r);
 
@@ -150,36 +128,19 @@ void mergeSort(Vaccine arr[], int l, int r) {
   }
 }
 
-/**
- * @brief Sorts an array of vaccines.
- *
- * @param vaccines Array of vaccines.
- * @param n Number of vaccines.
- */
 void vaccineSort(Vaccine vaccines[], int n) { mergeSort(vaccines, 0, n - 1); }
 
-/**
- * @brief Displays a vaccine.
- *
- * @param vaccine Vaccine to display.
- */
 void dispayVaccine(Vaccine vaccine) {
   Date date = vaccine.date;
   printf("%s %s %02d-%02d-%02d %d %d", vaccine.name, vaccine.batch, date.day,
          date.month, date.year, vaccine.stock, vaccine.appDoses);
 }
 
-/**
- * @brief Extracts a name from the input string.
- *
- * @param input Pointer to the input string.
- * @param nameLen Pointer to store the length of the extracted name.
- * @return char* Pointer to the extracted name.
- */
 char *extractName(char **input, unsigned long *nameLen) {
   char *start = strchr(*input, ' ') + 1, *name;
   *input = start;
-
+  
+  // Checks if the name is between quotes
   if (*start == '"') {
     start++;
     char *end = strchr(start, '"');
@@ -188,6 +149,7 @@ char *extractName(char **input, unsigned long *nameLen) {
     strncpy(name, start, *nameLen), name[*nameLen] = '\0';
     *input = end + 1;
 
+  // If the name isn't between quotes
   } else {
     char *end = strchr(start, ' ');
     *nameLen = end - start;
@@ -198,14 +160,8 @@ char *extractName(char **input, unsigned long *nameLen) {
   return name;
 }
 
-/**
- * @brief Finds a vaccine by name.
- *
- * @param sys Pointer to the system structure.
- * @param vacName Name of the vaccine to find.
- * @return Vaccine* Pointer to the found vaccine, or NULL if not found.
- */
 Vaccine *findVaccine(Vaccine *sys, char *vacName, int count, Date date) {
+
   for (int i = 0; i < count; i++)
 
     if (!strcmp(vacName, sys[i].name) && validDate(sys[i].date) &&

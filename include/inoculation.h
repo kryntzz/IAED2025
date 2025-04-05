@@ -1,3 +1,9 @@
+/*
+ * Projecto de IAED2025
+ * @file inoculation.h
+ * @author ist1113637 (Simão Lavos)
+ */
+
 #ifndef INOCULATION_H
 #define INOCULATION_H
 #include "config.h"

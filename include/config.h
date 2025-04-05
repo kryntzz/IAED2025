@@ -1,6 +1,7 @@
-/**
+/*
+ * Projecto de IAED2025
  * @file config.h
- * @brief Configuration constants and error messages for the project.
+ * @author ist1113637 (Simão Lavos)
  */
 
 #ifndef CONFIG_H

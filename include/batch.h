@@ -1,3 +1,9 @@
+/*
+ * Projecto de IAED2025
+ * @file all.h
+ * @author ist1113637 (Simão Lavos)
+ */
+
 #ifndef BATCH_H
 #define BATCH_H
 #include "config.h"

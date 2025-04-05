@@ -1,3 +1,9 @@
+/*
+ * Projecto de IAED2025
+ * @file vaccine.h
+ * @author ist1113637 (Simão Lavos)
+ */
+
 #ifndef VACCINE_H
 #define VACCINE_H
 #include "config.h"
@@ -31,7 +37,8 @@ void swap(Vaccine *a, Vaccine *b);
 int nameExists(Vaccine *sys, char *name, int count);
 
 /**
- * @brief Validates the input for creating a vaccine.
+ * @brief Validates the input for creating a vaccine
+ * (avoid buffer overflow).
  *
  * @param input Input string containing the vaccine details.
  * @param pt Language flag (0 for Portuguese, 1 for English).

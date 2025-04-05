@@ -1,17 +1,20 @@
+/*
+ * Projecto de IAED2025
+ * @file inoculation.c
+ * @author ist1113637 (Simão Lavos)
+ */
+
 #include "inoculation.h"
 #include "date.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * @brief Frees the memory allocated for the system's linked list.
- *
- * @param head Pointer to the head of the linked list.
- */
 void freeSystem(Node **head) {
   Node *current = *head;
 
+  //  Goes through all the linked list
+  //  freeing each node in the way
   while (current != NULL) {
 
     Node *aux = current;
@@ -22,11 +25,6 @@ void freeSystem(Node **head) {
   *head = NULL;
 }
 
-/**
- * @brief Displays the details of an inoculation.
- *
- * @param inoculation The inoculation to display.
- */
 void displayInoc(Inoculation inoculation) {
   Date date = inoculation.date;
 
@@ -34,15 +32,6 @@ void displayInoc(Inoculation inoculation) {
          date.day, date.month, date.year);
 }
 
-/**
- * @brief Creates a new node with the given inoculation details.
- *
- * @param name The name of the person.
- * @param batch The batch code of the vaccine.
- * @param date The date of inoculation.
- * @param vacname The name of the vaccine.
- * @return Node* Pointer to the newly created node.
- */
 Node *createNewNode(const char *name, const char *batch, Date date,
                     const char *vacname) {
   // Allocate memory for the new node
@@ -66,11 +55,6 @@ Node *createNewNode(const char *name, const char *batch, Date date,
   return newNode;
 }
 
-/**
- * @brief Initializes the hash map.
- *
- * @param map Pointer to the hash map to initialize.
- */
 void initializeHashMap(hashMap *map) {
   // Set the initial size and count of the hash map
   map->size = 100;
@@ -87,13 +71,6 @@ void initializeHashMap(hashMap *map) {
   return;
 }
 
-/**
- * @brief Hash function to generate an index for a given key.
- *
- * @param map Pointer to the hash map.
- * @param key The key to hash.
- * @return int The generated index.
- */
 int hashFunc(hashMap *map, char *key) {
   unsigned int hash = 0;
   // Compute the hash value using a prime multiplier
@@ -105,13 +82,6 @@ int hashFunc(hashMap *map, char *key) {
   return hash % map->size;
 }
 
-/**
- * @brief Inserts an inoculation into the hash map.
- *
- * @param map Pointer to the hash map.
- * @param key The key associated with the inoculation.
- * @param inoc The inoculation to insert.
- */
 void insertHash(hashMap *map, char *key, Inoculation inoc) {
 
   int index = hashFunc(map, key);
@@ -132,21 +102,13 @@ void insertHash(hashMap *map, char *key, Inoculation inoc) {
   return;
 }
 
-/**
- * @brief Checks if a person is vaccinated with a specific vaccine on a specific
- * date.
- *
- * @param map Pointer to the hash map.
- * @param name The name of the person.
- * @param vacName The name of the vaccine.
- * @param date The date of inoculation.
- * @return int 1 if vaccinated, 0 otherwise.
- */
 int isVaccinated(hashMap *map, char *name, char *vacName, Date date) {
 
   int index = hashFunc(map, name);
 
   Node *head = map->arr[index];
+
+  // Goes through the linked list
   while (head != NULL) {
     // Check if the name, vaccine name, and date match
     if (strcmp(head->inoc.name, name) == 0 &&
@@ -159,18 +121,11 @@ int isVaccinated(hashMap *map, char *name, char *vacName, Date date) {
   return 0; // Not vaccinated
 }
 
-/**
- * @brief Removes inoculations by name and date.
- *
- * @param sys Pointer to the system structure.
- * @param name Name of the user.
- * @param date Date of the inoculation.
- * @param count Pointer to store the count of removed inoculations.
- */
 void removeInocByNameAndDate(Node **sys, char *name, Date date, int *count) {
   Node *current = *sys;
   Node *prev = NULL;
 
+  // Goes through the linked list
   while (current != NULL) {
 
     if (!strcmp(name, current->inoc.name) &&
@@ -186,8 +141,8 @@ void removeInocByNameAndDate(Node **sys, char *name, Date date, int *count) {
       Node *temp = current;
       current = current->next;
 
-      free(temp->inoc.name);
-      free(temp);
+      free(temp->inoc.name);    // Free the dynamically allocated name 
+      free(temp);               // Free the node itself
 
     } else {
       prev = current;
@@ -196,21 +151,12 @@ void removeInocByNameAndDate(Node **sys, char *name, Date date, int *count) {
   }
 }
 
-/**
- * @brief Removes inoculations by name, batch, and date.
- *
- * @param sys Pointer to the system's linked list head.
- * @param name Name of the user.
- * @param batch Batch code of the vaccine.
- * @param date Date of the inoculation.
- * @param count Pointer to store the count of removed inoculations.
- * @param countBatch Pointer to store the count of removed batches.
- */
 void removeInocByNameBatchAndDate(Node **sys, char *name, char *batch,
                                   Date date, int *count, int *countBatch) {
   Node *current = *sys;
   Node *prev = NULL;
 
+  // Goes through the linked list
   while (current != NULL) {
 
     if (!strcmp(batch, current->inoc.batch)) {
@@ -233,8 +179,9 @@ void removeInocByNameBatchAndDate(Node **sys, char *name, char *batch,
       Node *temp = current;
       current = current->next;
 
-      free(temp->inoc.name);
-      free(temp);
+      free(temp->inoc.name);    // Free the dynamically allocated name
+      free(temp);               // Free the node itself
+
 
     } else {
       prev = current;
@@ -243,17 +190,11 @@ void removeInocByNameBatchAndDate(Node **sys, char *name, char *batch,
   }
 }
 
-/**
- * @brief Removes inoculations by name.
- *
- * @param sys Pointer to the system's linked list head.
- * @param name Name of the user.
- * @param count Pointer to store the count of removed inoculations.
- */
 void removeInocByName(Node **sys, char *name, int *count) {
   Node *current = *sys;
   Node *prev = NULL;
 
+  // Goes through the linked list
   while (current != NULL) {
 
     if (!strcmp(name, current->inoc.name)) {
@@ -270,8 +211,9 @@ void removeInocByName(Node **sys, char *name, int *count) {
       Node *temp = current;
       current = current->next;
 
-      free(temp->inoc.name);
-      free(temp);
+      free(temp->inoc.name);  // Free the dynamically allocated name
+      free(temp);             // Free the node itself
+
 
     } else {
       prev = current;
@@ -280,16 +222,10 @@ void removeInocByName(Node **sys, char *name, int *count) {
   }
 }
 
-/**
- * @brief Verifies if user exists
- *
- * @param name Pointer to the name.
- * @param sys Pointer to the system's linked list head.
- * @param pt Language flag (0 for Portuguese, 1 for English).
- */
 int inocVerify(char *name, Node *sys, int pt) {
   int countName = 0;
 
+  // Goes through the linked list
   for (Node *current = sys; current != NULL; current = current->next) {
 
     if (!strcmp(name, current->inoc.name)) {
@@ -304,11 +240,6 @@ int inocVerify(char *name, Node *sys, int pt) {
   return 1;
 }
 
-/**
- * @brief Frees the memory allocated for the hash map.
- *
- * @param map Pointer to the hash map to free.
- */
 void freeHashMap(hashMap *map) {
 
   // Iterate through each index in the hash map
@@ -330,14 +261,6 @@ void freeHashMap(hashMap *map) {
   free(map);
 }
 
-/**
- * @brief Removes an inoculation from the hash map by name, batch, and date.
- *
- * @param map Pointer to the hash map.
- * @param name The name of the person.
- * @param batch The batch code of the vaccine.
- * @param date The date of inoculation.
- */
 void removeHashByNameBatchAndDate(hashMap *map, char *name, char *batch,
                                   Date date) {
 
@@ -345,6 +268,7 @@ void removeHashByNameBatchAndDate(hashMap *map, char *name, char *batch,
   Node *current = map->arr[index];
   Node *prev = NULL;
 
+  // Goes through the linked list
   while (current != NULL) {
     // Check if the name, batch, and date match
     if (strcmp(name, current->inoc.name) == 0 &&
@@ -371,19 +295,13 @@ void removeHashByNameBatchAndDate(hashMap *map, char *name, char *batch,
   }
 }
 
-/**
- * @brief Removes an inoculation from the hash map by name and date.
- *
- * @param map Pointer to the hash map.
- * @param name The name of the person.
- * @param date The date of inoculation.
- */
 void removeHashByNameAndDate(hashMap *map, char *name, Date date) {
 
   int index = hashFunc(map, name);
   Node *current = map->arr[index];
   Node *prev = NULL;
 
+  // Goes through the linked list
   while (current != NULL) {
     // Check if the name and date match
     if (strcmp(name, current->inoc.name) == 0 &&
@@ -410,14 +328,6 @@ void removeHashByNameAndDate(hashMap *map, char *name, Date date) {
   }
 }
 
-/**
- * @brief Extracts a name from the input string and validates memory allocation.
- *
- * @param input Pointer to the input string.
- * @param name Pointer to store the extracted name.
- * @param pt Language flag (0 for Portuguese, 1 for English).
- * @return int 0 if successful, 1 if memory allocation fails.
- */
 int extractNameFromInput(char **input, char **name, int pt) {
   char *ptr = *input;
   // Find end of name: closing quote for quoted strings, space/newline otherwise
@@ -434,6 +344,7 @@ int extractNameFromInput(char **input, char **name, int pt) {
     return 1;
   }
 
+  // Copies the sting into the allocated space
   strncpy(*name, (*ptr == '"') ? ptr + 1 : ptr, nameLen);
   (*name)[nameLen] = '\0';
 

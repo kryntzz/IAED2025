@@ -1,6 +1,7 @@
-/**
+/*
+ * Projecto de IAED2025
  * @file date.h
- * @brief Date manipulation functions and structures.
+ * @author ist1113637 (Simão Lavos)
  */
 
 #ifndef DATE_H
@@ -50,7 +51,7 @@ int compareDates(Date d1, Date d2);
 int validDate(Date date);
 
 /**
- * @brief Validates a date against the system's current date.
+ * @brief Validates a date for a specific case.
  *
  * @param date Date to validate.
  * @param sys Pointer to the system structure.

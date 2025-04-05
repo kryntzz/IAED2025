@@ -4,8 +4,7 @@
  * @author ist1113637 (Simão Lavos)
  */
 
-#include "all.h"
-#include "inoculation.h"
+#include "include/all.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,9 +18,12 @@
  */
 void changeDate(Sys *sys, char *input, int pt) {
   Date date;
+
+  // Get the input 
   if (sscanf(input, "%*s %d-%d-%d", &date.day, &date.month, &date.year) <= 1) {
     printDate(sys->currentDate);
   } else {
+    // Checks if it's valid
     if (!validDate(date) || compareDates(sys->currentDate, date) > 0) {
       puts(pt ? EINVDATE : DATAINV);
       return;
@@ -41,27 +43,32 @@ void changeDate(Sys *sys, char *input, int pt) {
  */
 int verifyVaccine(Sys *sys, Vaccine vaccine, int pt) {
 
+  // Checks if batch already exists
   if (!batchExists(sys, vaccine.batch)) {
     puts(pt ? EDUPBATCH : LOTEDUP);
     return 0;
   }
 
+  // Checks if batch is valid
   if (!validBatch(vaccine.batch)) {
     puts(pt ? EINVBATCH : LOTEINV);
     return 0;
   }
 
+  // Checks if name is valid
   if (!validName(vaccine.name)) {
     puts(pt ? EINVNAME : NOMEINV);
     return 0;
   }
-
+  
+  // Checks if date is valid
   if (!validDate(vaccine.date) ||
       compareDates(sys->currentDate, vaccine.date) > 0) {
     puts(pt ? EINVDATE : DATAINV);
     return 0;
   }
-
+  
+  // Checks if stock is greater than 0
   if (vaccine.stock < 0) {
     puts(pt ? INVQUANT_EN : INVQUANT);
     return 0;
@@ -88,7 +95,8 @@ void createVaccine(Sys *sys, char *input, int pt) {
   if (!validateVaccineInput(input, pt)) {
     return;
   }
-
+  
+  // Gets the input
   sscanf(input, "%*s %s %d-%d-%d %d %s", vaccine.batch, &date.day, &date.month,
          &date.year, &vaccine.stock, vaccine.name);
 
@@ -97,6 +105,7 @@ void createVaccine(Sys *sys, char *input, int pt) {
   if (!verifyVaccine(sys, vaccine, pt))
     return;
 
+  // Stores it in sys
   vaccine.appDoses = 0;
   sys->data[sys->count] = vaccine;
   sys->count++;
@@ -115,6 +124,7 @@ void listVaccine(Sys *sys, char *input, int pt) {
   char name[MAXNAME];
 
   if (sscanf(input, "%*s %s", name) < 1) {
+    // Display all the vaccines
     for (int i = 0; i < sys->count; i++) {
       dispayVaccine(sys->data[i]);
       putchar('\n');
@@ -132,6 +142,7 @@ void listVaccine(Sys *sys, char *input, int pt) {
         printf("%s: ", name);
         puts(pt ? EINVNAMEVAC : NOMEVACINV);
       } else {
+        //Display all the vaccines with that name
         for (int i = 0; i < sys->count; i++) {
           if (!strcmp(name, sys->data[i].name)) {
             dispayVaccine(sys->data[i]);
@@ -167,6 +178,7 @@ void appendNode(Sys *sys, Node *newNode) {
 void applyInoculation(Sys *sys, char *input, int pt) {
   unsigned long nameLen;
   char *name = extractName(&input, &nameLen);
+
   while (*input == ' ')
     input++;
   char vacName[MAXNAME];
@@ -188,6 +200,7 @@ void applyInoculation(Sys *sys, char *input, int pt) {
     return;
   }
 
+  // Stores it in sys
   Node *newNode =
       createNewNode(name, vaccine->batch, sys->currentDate, vacName);
   appendNode(sys, newNode);
@@ -209,7 +222,7 @@ void listInoculation(Sys *sys, char *input, int pt) {
   char *name, *ptr = input;
   ptr = strchr(ptr, ' ');
 
-  // Standart case
+  // Standart case (Displays all the inoculations)
   if (!ptr) {
     for (Node *current = sys->data2; current != NULL; current = current->next) {
       displayInoc(current->inoc);
@@ -229,6 +242,7 @@ void listInoculation(Sys *sys, char *input, int pt) {
   strncpy(name, (*ptr == '"') ? ptr + 1 : ptr, nameLen);
   name[nameLen] = '\0';
 
+  // Display the inoculations for a specific name
   for (Node *current = sys->data2; current != NULL; current = current->next) {
     if (!strcmp(name, current->inoc.name)) {
       count++;
@@ -252,6 +266,7 @@ void removeVaccine(Sys *sys, char *input, int pt) {
   char batch[MAXBATCHCODE];
   sscanf(input, "%*s %s", batch);
 
+  // Goes through all the vaccines
   for (int i = 0; i < sys->count; i++) {
     if (strcmp(batch, sys->data[i].batch) == 0) {
       printf("%d\n", sys->data[i].appDoses);
@@ -331,26 +346,29 @@ void removeInoc(Sys *sys, char *input, int pt) {
     int count = 0, inp = 0, countBatch = 0;
     char batch[MAXBATCHCODE], *name, *ptr = input;
     Date date;
-
-    ptr = strchr(ptr, ' ');
-    ptr++;
-    if (extractNameFromInput(&ptr, &name, pt)) return;
-    if (!inocVerify(name, sys->data2, pt)) { free(name); return; }
+    
+    // Gets the name
+    ptr = strchr(ptr, ' '); ptr++;
+    if (extractNameFromInput(&ptr, &name, pt) || !inocVerify(name, sys->data2, pt)) {
+        free(name); return;
+    }
 
     inp = sscanf(input, "%*s %*s %d-%d-%d %s", &date.day, &date.month, &date.year, batch);
-    
+
     switch (inp) {
+        // Name and date case
         case 3:
             if (!validateDate(date, sys->currentDate, pt)) { free(name); return; }
             removeInocByNameAndDateHelper(sys, name, date, &count);
             break;
         case 4:
+        // Name, date and batch case
             removeInocByNameBatchHelper(sys, name, batch, date, &count, &countBatch, pt);
             if (countBatch == 0) { free(name); return; }
             break;
         default:
+        // Name case
             removeInocDefaultCase(sys, name, &count);
-            break;
     }
     free(name);
     printf("%d\n", count);
@@ -385,9 +403,11 @@ int main(int argc, char **argv) {
   Sys sys;
   initializeSystem(&sys);
 
+  // Checks if the output should be in Portuguese
   if (argc > 1 && strcmp(argv[1], "pt") == 0)
-    pt = 0; // Checks if the input is in Portuguese
+    pt = 0;
 
+  // Gets the input and apply's for each case
   while (fgets(buf, BUFMAX, stdin)) {
     switch (buf[0]) {
     case 'q':

@@ -1,3 +1,9 @@
+/*
+ * Projecto de IAED2025
+ * @file sys.h
+ * @author ist1113637 (Simão Lavos)
+ */
+
 #ifndef SYS_H
 #define SYS_H
 #include "config.h"
