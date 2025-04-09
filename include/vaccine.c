@@ -10,17 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-void swap(Vaccine *a, Vaccine *b) {
-  Vaccine temp = *a;
-
-  *a = *b;
-  *b = temp;
-}
-
 int nameExists(Vaccine *sys, char *name, int count) {
   // Iterates through all the vaccines
   for (int i = 0; i < count; i++) {
-    
+
     // Compares the name
     if (!strcmp(name, sys[i].name)) {
       return 1;
@@ -31,7 +24,7 @@ int nameExists(Vaccine *sys, char *name, int count) {
 
 int validateVaccineInput(char *input, int pt) {
   char input2[BUFMAX];
-  
+
   // Creates a copy of the input because strtok
   // changes it, then it gets the word by searching
   // for the ' ' at the end of the name
@@ -76,7 +69,7 @@ void merge(Vaccine arr[], int l, int m, int r) {
   int n1 = m - l + 1, n2 = r - m;
 
   Vaccine L[n1], R[n2];
-  
+
   // Iterates through the left part of the array
   for (int i = 0; i < n1; i++)
     L[i] = arr[l + i];
@@ -101,7 +94,7 @@ void merge(Vaccine arr[], int l, int m, int r) {
     }
     k++;
   }
-  
+
   // Finishes goint through the array, adding it to the right part
   while (i < n1) {
     arr[k] = L[i];
@@ -118,7 +111,7 @@ void merge(Vaccine arr[], int l, int m, int r) {
 void mergeSort(Vaccine arr[], int l, int r) {
   if (l < r) {
     int m = l + (r - l) / 2;
-    
+
     // Recursively goes to through the right part of the array
     //  and the left part of the array
     mergeSort(arr, l, m);
@@ -139,7 +132,7 @@ void dispayVaccine(Vaccine vaccine) {
 char *extractName(char **input, unsigned long *nameLen) {
   char *start = strchr(*input, ' ') + 1, *name;
   *input = start;
-  
+
   // Checks if the name is between quotes
   if (*start == '"') {
     start++;
@@ -149,7 +142,7 @@ char *extractName(char **input, unsigned long *nameLen) {
     strncpy(name, start, *nameLen), name[*nameLen] = '\0';
     *input = end + 1;
 
-  // If the name isn't between quotes
+    // If the name isn't between quotes
   } else {
     char *end = strchr(start, ' ');
     *nameLen = end - start;

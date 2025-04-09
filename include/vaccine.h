@@ -19,14 +19,6 @@ typedef struct {
 } Vaccine;
 
 /**
- * @brief Swaps the value of two vaccines.
- *
- * @param a Pointer to the first vaccine.
- * @param b Pointer to the second vaccine.
- */
-void swap(Vaccine *a, Vaccine *b);
-
-/**
  * @brief Checks if a name exists in the system.
  *
  * @param sys Pointer to the system structure.
